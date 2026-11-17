@@ -1,6 +1,6 @@
 package fr.esgi.banque.business;
 
-import fr.esgi.banque.Compte;
+import java.beans.Transient;
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -9,9 +9,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
 import org.junit.jupiter.params.provider.NullSource;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public class CompteTest {
@@ -30,7 +30,7 @@ public class CompteTest {
 
 	@Nested
 	@DisplayName("C1 - Num et Titulaire obligés")
-	class C1_NuméroEtTitulaire {
+	class C1_NumeroEtTitulaire {
 		@Test
 		void compteValideConserveSesInfos() {
 			BigDecimal solde = new BigDecimal("100.00");
@@ -65,7 +65,7 @@ public class CompteTest {
 			assertThatThrownBy(() -> new Compte("FR001", titulaire, solde, decouvert))
 	.isInstanceOf(IllegalArgumentException.class);
 		}
-
+	}
 		@Nested
 		@DisplayName("C2 - Solde début et découverte obligés, découverte >= 0")
 		class C2_SoldeEtDecouvert {
@@ -78,8 +78,15 @@ public class CompteTest {
 	.isInstanceOf(IllegalArgumentException.class);
 			}
 
+			@Transient void decouvertNullRefuse() {
+				BigDecimal solde = new BigDecimal("100");
+
+				assertThatThrownBy(() -> new Compte("FR001", "Moi", solde , null))
+					.isInstanceOf(IllegalArgumentException.class);
+			}
+
 			@ParameterizedTest(name = "découvert {0} refusé")
-			@ValueSource(strings = {"-0", "-0.00", "-0.01", "-200"})
+			@ValueSource(strings = {"-0.01", "-1", "-200"})
 			void decouvertNegatifRefuse(BigDecimal decouvert) {
 				BigDecimal solde = new BigDecimal("100");
 
@@ -88,7 +95,7 @@ public class CompteTest {
 			}
 
 			@ParameterizedTest(name = "découvert {0} accepté")
-			@ValueSource(strings = {"0", "0.00", "0.01", "200"})
+			@ValueSource(strings = {"0", "0.00", "0.01", "1", "200"})
 			void decouvertPositifOuNulAccepte(BigDecimal decouvert) {
 				BigDecimal solde = new BigDecimal("100");
 
@@ -106,12 +113,12 @@ public class CompteTest {
 
 			@ParameterizedTest(name = "crediter {0} sur 100.00 donne {1}")
 			@CsvSource({
-				            "0,01, 100.01",
+				            "0.01, 100.01",
 							"50.00, 150.00",
 							"1000,  1100.00"
 			})
 			void montantStrictementPositifAccepte(BigDecimal montant, BigDecimal soldeAttendu) {
-				Compte compte = compte("1000.00", "200");
+				Compte compte = compte("100.00", "200");
 
 				compte.crediter(montant);
 
@@ -132,4 +139,3 @@ public class CompteTest {
 			}
 		}
 	}
-}

@@ -63,6 +63,38 @@ public class CompteTest {
 	.isInstanceOf(IllegalArgumentException.class);
 		}
 
-		
+		@Nested
+		@DisplayName("C2 - Solde début et découverte obligés, découverte >= 0")
+		class C2_SoldeEtDecouvert {
+
+			@Test
+			void soldeInitialNullRefuse() {
+				BigDecimal decouvert = new BigDecimal("200");
+
+				assertThatThrownBy(() -> new Compte("FR001", "Moi", null, decouvert))
+	.isInstanceOf(IllegalArgumentException.class);
+			}
+
+			@ParameterizedTest(name = "découvert {0} refusé")
+			@ValueSource(strings = {"-0", "-0.00", "-0.01", "-200"})
+			void decouvertNegatifRefuse(BigDecimal decouvert) {
+				BigDecimal solde = new BigDecimal("100");
+
+				assertThatThrownBy(() -> new Compte("FR001", "Moi", solde, decouvert))
+	.isInstanceOf(IllegalArgumentException.class);
+			}
+
+			@ParameterizedTest(name = "découvert {0} accepté")
+			@ValueSource(strings = {"0", "0.00", "0.01", "200"})
+			void decouvertPositifOuNulAccepte(BigDecimal decouvert) {
+				BigDecimal solde = new BigDecimal("100");
+
+				Compte compte = new Compte("FR001", "Moi", solde, decouvert);
+
+				assertThat(compte.getDecouvertAutorise()).isEqualByComparingTo(decouvert);
+
+			}
+
+		}
 	}
 }

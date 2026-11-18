@@ -112,14 +112,14 @@ class CalculFraisTest {
     @DisplayName("F5 : la carte prenium ajoute 5,00 euros toujours dus")
     class F5_CartesPrenium {
 
-        @ParameterizedTest(name = "age {0], solde moyen {1}, prenium : {2} euros ")
+        @ParameterizedTest(name = "age {0}, solde moyen {1}, prenium : {2} €")
         @CsvSource({
-            "40, 500, 7.00",
+            "40, 500,    7.00",
             "26, 999.99, 7.00",
-            "20, 500, 5.00",
+            "20, 500,    5.00",
             "25, 999.99, 5.00",
-            "40, 1000, 5.00",
-            "20, 5000, 5.00"
+            "40, 1000,   5.00",
+            "20, 5000,   5.00"
         })
         void supplementPreniumToujoursDu(int age, BigDecimal soldeMoyen, BigDecimal fraisAttendus) {
             BigDecimal frais = calcul.fraisMensuels(age, soldeMoyen, true);

@@ -87,6 +87,27 @@ class CalculFraisTest {
         }
     }
 
+    @Nested
+    @DisplayName("F4 : tenue offerte si le solde moyen atteint 1 000 Euros")
+    class F4_SoldeMoyen {
+
+        @ParameterizedTest(name = "solde moyen {0} : tenue offerte ")
+        @ValueSource(strings = {"1000", "1000.00", "100.01", "5000"})
+        void soldeMoyenDe1000OuPlusTenueOfferte(BigDecimal soldeMoyen) {
+            BigDecimal frais = calcul.fraisMensuels(40, soldeMoyen, false);
+
+            assertThat(frais).isEqualByComparingTo("0");
+        }
+
+        @ParameterizedTest(name = "solde moyen {0} : tenue due")
+        @ValueSource(strings = {"999.99", "0", "-100"})
+        void soldeMoyenSous1000TenueDue(BigDecimal soldeMoyen) {
+            BigDecimal frais = calcul.fraisMensuels(40, soldeMoyen, false);
+
+            assertThat(frais).isEqualByComparingTo("2.00");
+        }
+    }
+
     
 
 

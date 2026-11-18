@@ -60,6 +60,33 @@ class CalculFraisTest {
         }
     }
 
+    @Nested
+    @DisplayName("F3 : tenue offerte aux moins de 26 an")
+    class F3_Jeunes {
+
+        @ParameterizedTest(name = "age {0}, solde moyen {1} : tenue offerte")
+        @CsvSource({
+            "18, 0",
+            "20, 500",
+            "25, 999.99"
+        })
+        void moinsDe26AnsTenueOfferte(int age, BigDecimal soldeMoyen) {
+            BigDecimal frais = calcul.fraisMensuels(age, soldeMoyen, false);
+
+            assertThat(frais).isEqualByComparingTo("0");
+        }
+
+        @ParameterizedTest(name = "age {0} : tenue due")
+        @ValueSource(ints = {26, 27})
+        void aPartirDe26AnsTenueDue(int age) {
+            BigDecimal soldeMoyen = new BigDecimal("500");
+
+            BigDecimal frais = calcul.fraisMensuels(age, soldeMoyen, false);
+
+            assertThat(frais).isEqualByComparingTo("2.00");
+        }
+    }
+
     
 
 

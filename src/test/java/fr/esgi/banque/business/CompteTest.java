@@ -173,6 +173,43 @@ public class CompteTest {
 
 	}
 
+	@Nested
+	@DisplayName("C5: debit autoriser jusqu'à -decouvert autoriser (limite incluse)")
+	class C5_LimitDeDecouvert {
+
+		@ParameterizedTest(name = "solde {0}, decouvert {1}, debit {2} : accepter, solde {3}")
+		@CsvSource({
+			"100, 200, 300, -200",
+			"100, 200, 299.99, -199.993",
+			"100, 200, 50 +, 50",
+			"100, 0, 100, 0",
+			"-50, 200, 150, -200"
+		})
+
+		void debitJusquALaLimiteAccepte(String solde, String decouvert, BigDecimal montant, BigDecimal soldeAttendu) {
+			Compte compte = compte(solde, decouvert);
+
+			compte.debiter(montant);
+
+			assertThat(compte.getSolde()).isEqualByComparingTo(soldeAttendu);
+		}
+
+		@ParameterizedTest(name = "solde {0}, decouvert {1}, debit {2} : refuser")
+		@CsvSource({
+			"100, 200, 300.01",
+			"100, 0, 0.01",
+			"-200, 200, 0.01"
+		})
+		void debitAuDeLaDeLaLimiteRefuseEtSoldeInchange(String solde, String decouvert, BigDecimal montant) {
+			Compte compte = compte(solde, decouvert);
+
+			assertThatThrownBy(() -> compte.debiter(montant))
+			.isInstanceOf(SoldeInsuffisantException.class);
+			assertThat(compte.getSolde()).isEqualByComparingTo(solde);
+		}
+
+	}
+
 	
 
 }

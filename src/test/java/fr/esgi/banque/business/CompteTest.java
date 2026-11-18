@@ -66,76 +66,115 @@ public class CompteTest {
 	.isInstanceOf(IllegalArgumentException.class);
 		}
 	}
-		@Nested
-		@DisplayName("C2 - Solde début et découverte obligés, découverte >= 0")
-		class C2_SoldeEtDecouvert {
 
-			@Test
-			void soldeInitialNullRefuse() {
-				BigDecimal decouvert = new BigDecimal("200");
+	@Nested
+	@DisplayName("C2 - Solde début et découverte obligés, découverte >= 0")
+	class C2_SoldeEtDecouvert {
 
-				assertThatThrownBy(() -> new Compte("FR001", "Moi", null, decouvert))
-	.isInstanceOf(IllegalArgumentException.class);
-			}
+		@Test
+		void soldeInitialNullRefuse() {
+			BigDecimal decouvert = new BigDecimal("200");
 
-			@Transient void decouvertNullRefuse() {
-				BigDecimal solde = new BigDecimal("100");
+			assertThatThrownBy(() -> new Compte("FR001", "Moi", null, decouvert))
+			.isInstanceOf(IllegalArgumentException.class);
+		}
 
-				assertThatThrownBy(() -> new Compte("FR001", "Moi", solde , null))
-					.isInstanceOf(IllegalArgumentException.class);
-			}
+		@Transient void decouvertNullRefuse() {
+			BigDecimal solde = new BigDecimal("100");
 
-			@ParameterizedTest(name = "découvert {0} refusé")
-			@ValueSource(strings = {"-0.01", "-1", "-200"})
-			void decouvertNegatifRefuse(BigDecimal decouvert) {
-				BigDecimal solde = new BigDecimal("100");
+			assertThatThrownBy(() -> new Compte("FR001", "Moi", solde , null))
+				.isInstanceOf(IllegalArgumentException.class);
+		}
 
-				assertThatThrownBy(() -> new Compte("FR001", "Moi", solde, decouvert))
-	.isInstanceOf(IllegalArgumentException.class);
-			}
+		@ParameterizedTest(name = "découvert {0} refusé")
+		@ValueSource(strings = {"-0.01", "-1", "-200"})
+		void decouvertNegatifRefuse(BigDecimal decouvert) {
+			BigDecimal solde = new BigDecimal("100");
 
-			@ParameterizedTest(name = "découvert {0} accepté")
-			@ValueSource(strings = {"0", "0.00", "0.01", "1", "200"})
-			void decouvertPositifOuNulAccepte(BigDecimal decouvert) {
-				BigDecimal solde = new BigDecimal("100");
+			assertThatThrownBy(() -> new Compte("FR001", "Moi", solde, decouvert))
+			.isInstanceOf(IllegalArgumentException.class);
+		}
 
-				Compte compte = new Compte("FR001", "Moi", solde, decouvert);
+		@ParameterizedTest(name = "découvert {0} accepté")
+		@ValueSource(strings = {"0", "0.00", "0.01", "1", "200"})
+		void decouvertPositifOuNulAccepte(BigDecimal decouvert) {
+			BigDecimal solde = new BigDecimal("100");
 
-				assertThat(compte.getDecouvertAutorise()).isEqualByComparingTo(decouvert);
+			Compte compte = new Compte("FR001", "Moi", solde, decouvert);
 
-			}
+			assertThat(compte.getDecouvertAutorise()).isEqualByComparingTo(decouvert);
 
 		}
 
-		@Nested
-		@DisplayName("C3 : crediter n'accepte qu'un montant strictement positif")
-		class C3_Crediter {
+	}
 
-			@ParameterizedTest(name = "crediter {0} sur 100.00 donne {1}")
-			@CsvSource({
-				            "0.01, 100.01",
-							"50.00, 150.00",
-							"1000,  1100.00"
-			})
-			void montantStrictementPositifAccepte(BigDecimal montant, BigDecimal soldeAttendu) {
-				Compte compte = compte("100.00", "200");
+	@Nested
+	@DisplayName("C3 : crediter n'accepte qu'un montant strictement positif")
+	class C3_Crediter {
 
-				compte.crediter(montant);
+		@ParameterizedTest(name = "crediter {0} sur 100.00 donne {1}")
+		@CsvSource({
+			            "0.01, 100.01",
+						"50.00, 150.00",
+						"1000,  1100.00"
+		})
 
-				assertThat(compte.getSolde()).isEqualByComparingTo(soldeAttendu);
-			}
+		void montantStrictementPositifAccepte(BigDecimal montant, BigDecimal soldeAttendu) {
+			Compte compte = compte("100.00", "200");
 
-			@ParameterizedTest(name = "crediter {0} refusé")
-			@NullSource
-			@ValueSource(strings = {"0", "0.00", "-0.01", "-50"})
-			void montantNullNulOuNegatifRefuse(BigDecimal montant) {
-				Compte compte = compte("100.00", "200");
+			compte.crediter(montant);
 
-				assertThatThrownBy(() -> compte.crediter(montant))
+			assertThat(compte.getSolde()).isEqualByComparingTo(soldeAttendu);
+		}
 
-				.isInstanceOf(IllegalArgumentException.class);
+		@ParameterizedTest(name = "crediter {0} refusé")
+		@NullSource
+		@ValueSource(strings = {"0", "0.00", "-0.01", "-50"})
+		void montantNullNulOuNegatifRefuse(BigDecimal montant) {
+			Compte compte = compte("100.00", "200");
 
-				assertThat(compte.getSolde()).isEqualByComparingTo("100.00");
-			}
+			assertThatThrownBy(() -> compte.crediter(montant))
+
+			.isInstanceOf(IllegalArgumentException.class);
+
+			assertThat(compte.getSolde()).isEqualByComparingTo("100.00");
 		}
 	}
+
+	@Nested
+	@DisplayName("C4: debiter n'accepte qu'un montant strictement positif")
+	class C4_Debiter {
+		
+		@ParameterizedTest(name = "débiter {0} sur 100.00 donne {1}")
+		@CsvSource({
+			"0.01,  99.99",
+			"50.00, 50.00"
+	})
+		void montantStrictementPositifAccepte(BigDecimal montant, BigDecimal soldeAttendu) {
+
+			Compte compte = compte("100.00", "200");
+
+			compte.debiter(montant);
+
+			assertThat(compte.getSolde()).isEqualByComparingTo(soldeAttendu);
+		}
+
+		@ParameterizedTest(name = "debiter {0} refusé")
+		@NullSource
+		@ValueSource(strings = {"0", "0.00", "-0.01", "-50"})
+		void montantNullNulOuNegatifRefuse(BigDecimal montant) {
+
+			Compte compte = compte("100.00", "200");
+		
+			assertThatThrownBy(() -> compte.debiter(montant))
+			.isInstanceOf(IllegalArgumentException.class);
+			assertThat(compte.getSolde()).isEqualByComparingTo("100.00");
+		}
+
+	}
+
+	
+
+}
+
+

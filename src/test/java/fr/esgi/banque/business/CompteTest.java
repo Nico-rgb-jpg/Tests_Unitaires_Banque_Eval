@@ -244,6 +244,30 @@ public class CompteTest {
 
 	}
 
+	@Nested@DisplayName("C7 : estADecouvert() quand le solde est strictement negatif")
+	class C7_EstADecouvert {
+
+		@ParameterizedTest(name = "solde {0} : à decouvert")
+		@ValueSource(strings = {"-0.01", "-100"})
+		void soldeNegatifEstADecouvert(String solde) {
+			Compte compte = compte(solde, "200");
+
+			boolean aDecouvert = compte.estADecouvert();
+
+			assertThat(aDecouvert).isTrue();
+		}
+
+		@ParameterizedTest(name = "solde {0} : pas à découvert")
+		@ValueSource(strings = {"0", "0.00", "0.01", "100"})
+		void soldePositifOuNulNEstPasADecouvert(String solde) {
+			Compte compte = compte(solde, "200");
+
+			boolean aDecouvert = compte.estADecouvert();
+
+			assertThat(aDecouvert).isFalse();
+		}
+	}
+
 
 
 }

@@ -92,7 +92,7 @@ class CalculFraisTest {
     class F4_SoldeMoyen {
 
         @ParameterizedTest(name = "solde moyen {0} : tenue offerte ")
-        @ValueSource(strings = {"1000", "1000.00", "100.01", "5000"})
+        @ValueSource(strings = {"1000", "1000.00", "1000.01", "5000"})
         void soldeMoyenDe1000OuPlusTenueOfferte(BigDecimal soldeMoyen) {
             BigDecimal frais = calcul.fraisMensuels(40, soldeMoyen, false);
 
@@ -108,7 +108,28 @@ class CalculFraisTest {
         }
     }
 
-    
+    @Nested
+    @DisplayName("F5 : la carte prenium ajoute 5,00 euros toujours dus")
+    class F5_CartesPrenium {
+
+        @ParameterizedTest(name = "age {0], solde moyen {1}, prenium : {2} euros ")
+        @CsvSource({
+            "40, 500, 7.00",
+            "26, 999.99, 7.00",
+            "20, 500, 5.00",
+            "25, 999.99, 5.00",
+            "40, 1000, 5.00",
+            "20, 5000, 5.00"
+        })
+        void supplementPreniumToujoursDu(int age, BigDecimal soldeMoyen, BigDecimal fraisAttendus) {
+            BigDecimal frais = calcul.fraisMensuels(age, soldeMoyen, true);
+
+            assertThat(frais).isEqualByComparingTo(fraisAttendus);
+        }
+    }
+
+
+
 
 
 

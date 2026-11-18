@@ -180,8 +180,8 @@ public class CompteTest {
 		@ParameterizedTest(name = "solde {0}, decouvert {1}, debit {2} : accepter, solde {3}")
 		@CsvSource({
 			"100, 200, 300, -200",
-			"100, 200, 299.99, -199.993",
-			"100, 200, 50 +, 50",
+			"100, 200, 299.99, -199.99",
+			"100, 200, 50, 50",
 			"100, 0, 100, 0",
 			"-50, 200, 150, -200"
 		})
@@ -197,7 +197,7 @@ public class CompteTest {
 		@ParameterizedTest(name = "solde {0}, decouvert {1}, debit {2} : refuser")
 		@CsvSource({
 			"100, 200, 300.01",
-			"100, 0, 0.01",
+			"100, 0, 100.01",
 			"-200, 200, 0.01"
 		})
 		void debitAuDeLaDeLaLimiteRefuseEtSoldeInchange(String solde, String decouvert, BigDecimal montant) {
@@ -210,7 +210,41 @@ public class CompteTest {
 
 	}
 
-	
+	@Nested@DisplayName("C6 : estVide() quelle que soit l'ecriture de zero ")
+	class C6_EstVide {
+
+		@ParameterizedTest(name = "solde {0} : vide")
+		@ValueSource(strings ={"0", "0.00", "0.000", "-0.00"})
+		void soldeAZeroEstVide(String solde) {
+			Compte compte = compte(solde, "200");
+
+			boolean vide = compte.estVide();
+
+			assertThat(vide).isTrue();
+		}
+
+		@ParameterizedTest(name = "solde {0} : pas vide")
+		@ValueSource(strings = {"0.01", "-0.01", "100"})
+		void soldeNonNulEstPasVide(String solde) {
+			Compte compte = compte(solde, "200");
+
+			boolean vide = compte.estVide();
+
+			assertThat(vide).isFalse();
+		}
+
+		@Test
+		void compteDevientVideApresDebitDeToutLeSolde() {
+			Compte compte = compte("100.00", "200");
+
+			compte.debiter(new BigDecimal("100.00"));
+
+			assertThat(compte.estVide()).isTrue();
+		}
+
+	}
+
+
 
 }
 

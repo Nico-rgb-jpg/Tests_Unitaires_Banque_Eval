@@ -2,12 +2,14 @@ package fr.esgi.banque.business;
 
 import java.math.BigDecimal;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatNoException;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class CalculFraisTest {
@@ -40,6 +42,25 @@ class CalculFraisTest {
             .isInstanceOf(IllegalArgumentException.class);
         }
     }
+
+    @Nested
+    @DisplayName("F2 : frais de tenu de 2,00 euros par mois")
+    class F2_FraisDeTenue {
+
+        @ParameterizedTest(name = "age {0}, solde moyen {1}: 2,00 euros")
+        @CsvSource({
+            "27, 0",
+            "30, 500",
+            "65, 999.99"
+        })
+        void fraisDeTenueDe2Euros(int age, BigDecimal soldeMoyen) {
+            BigDecimal frais = calcul.fraisMensuels(age, soldeMoyen, false);
+
+            assertThat(frais).isEqualByComparingTo("2.00");
+        }
+    }
+
+    
 
 
 

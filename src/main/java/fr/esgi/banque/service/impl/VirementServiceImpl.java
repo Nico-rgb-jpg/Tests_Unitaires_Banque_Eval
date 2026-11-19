@@ -3,6 +3,7 @@ package fr.esgi.banque.service.impl;
 import fr.esgi.banque.service.CompteRepository;
 import fr.esgi.banque.service.NotificationService;
 import fr.esgi.banque.service.Virement;
+import fr.esgi.banque.service.CompteIntrouvableException;
 
 import java.math.BigDecimal;
 import java.time.Clock;
@@ -28,6 +29,12 @@ public class VirementServiceImpl {
         if (Objects.equals(numeroSource, numeroDestination)) {
 	        throw new IllegalArgumentException("Un virement vers le même compte est interdit");
         }
+
+        repository.trouver(numeroSource)
+            .orElseThrow(() -> new CompteIntrouvableException(numeroSource));
+            
+        repository.trouver(numeroDestination)
+            .orElseThrow(() -> new CompteIntrouvableException(numeroDestination));
         return null;
     }
 }

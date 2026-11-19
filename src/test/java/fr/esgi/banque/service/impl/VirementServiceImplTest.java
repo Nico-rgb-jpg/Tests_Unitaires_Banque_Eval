@@ -2,6 +2,7 @@ package fr.esgi.banque.service.impl;
 
 import fr.esgi.banque.service.CompteRepository;
 import fr.esgi.banque.service.NotificationService;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -16,6 +17,10 @@ import java.time.Instant;
 import java.time.ZoneId;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import org.junit.jupiter.api.Test;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 @ExtendWith(MockitoExtension.class)
@@ -45,6 +50,15 @@ class VirementServiceImplTest {
         assertThatThrownBy(() -> service.virer("FR001", "FR002", montant))
                 .isInstanceOf(IllegalArgumentException.class);
         verifyNoInteractions(repository, notifications);
+    }
+
+    @Test
+    void v2_virementVersLeMememCompteRefuse() {
+        BigDecimal montant = new BigDecimal("50.00");
+
+        assertThatThrownBy(() -> service.virer("FR001", "FR001", montant))
+        .isInstanceOf(IllegalArgumentException.class);
+        verify(repository, never()).sauvegarder(any());
     }
 }
 

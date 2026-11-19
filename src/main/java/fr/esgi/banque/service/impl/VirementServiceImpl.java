@@ -4,9 +4,11 @@ import fr.esgi.banque.service.CompteRepository;
 import fr.esgi.banque.service.NotificationService;
 import fr.esgi.banque.service.Virement;
 import fr.esgi.banque.service.CompteIntrouvableException;
+import fr.esgi.banque.service.VirementRefuseException;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -24,7 +26,7 @@ public class VirementServiceImpl {
         this.horloge = horloge;
     }
 
-    public Virement virer(String numeroSource, String numeroDestination, BigDecimal montant) {
+        public Virement virer(String numeroSource, String numeroDestination, BigDecimal montant) {
         if (montant == null|| montant.signum() <= 0) {
             throw new IllegalArgumentException("Le montant du virement doit etre positif chef");
         }
@@ -33,6 +35,11 @@ public class VirementServiceImpl {
 	        throw new IllegalArgumentException("Un virement vers le même compte est interdit");
         }
 
+                LocalDate aujourdHui = LocalDate.now(horloge);
+        if (aujourdHui.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            throw new VirementRefuseException(" Aucun Virement est accepté ce Dimache ");
+        }
+        
         repository.trouver(numeroSource)
             .orElseThrow(() -> new CompteIntrouvableException(numeroSource));
             
@@ -51,7 +58,7 @@ public class VirementServiceImpl {
         if (montant.compareTo(new BigDecimal("10000")) > 0) {
             notifications.alerter(source.getTitulaire(), "Virement de " + montant + " € depuis le compte " + numeroSource);
         }
-
-        return new Virement(numeroSource, numeroDestination, montant, LocalDate.now(horloge));
+        
+        return new Virement(numeroSource, numeroDestination, montant, aujourdHui);
     }
 }

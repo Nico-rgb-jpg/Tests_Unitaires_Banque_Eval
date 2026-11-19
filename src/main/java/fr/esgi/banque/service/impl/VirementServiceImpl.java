@@ -7,7 +7,10 @@ import fr.esgi.banque.service.CompteIntrouvableException;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.util.Objects;
+
+import fr.esgi.banque.business.Compte;
 
 public class VirementServiceImpl {
 
@@ -35,6 +38,15 @@ public class VirementServiceImpl {
             
         repository.trouver(numeroDestination)
             .orElseThrow(() -> new CompteIntrouvableException(numeroDestination));
-        return null;
+
+        Compte source = repository.trouver(numeroSource)
+            .orElseThrow(() -> new CompteIntrouvableException(numeroSource));
+        Compte destination = repository.trouver(numeroDestination)
+            .orElseThrow(() -> new CompteIntrouvableException(numeroDestination));
+        source.debiter(montant);
+        destination.crediter(montant);
+        repository.sauvegarder(source);
+        repository.sauvegarder(destination);
+        return new Virement(numeroSource, numeroDestination, montant, LocalDate.now(horloge));
     }
 }

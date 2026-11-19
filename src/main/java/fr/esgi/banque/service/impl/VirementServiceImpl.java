@@ -47,6 +47,11 @@ public class VirementServiceImpl {
         destination.crediter(montant);
         repository.sauvegarder(source);
         repository.sauvegarder(destination);
+
+        if (montant.compareTo(new BigDecimal("10000")) > 0) {
+            notifications.alerter(source.getTitulaire(), "Virement de " + montant + " € depuis le compte " + numeroSource);
+        }
+
         return new Virement(numeroSource, numeroDestination, montant, LocalDate.now(horloge));
     }
 }

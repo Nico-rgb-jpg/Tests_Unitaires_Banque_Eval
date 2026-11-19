@@ -2,6 +2,7 @@ package fr.esgi.banque.service.impl;
 
 import fr.esgi.banque.service.CompteRepository;
 import fr.esgi.banque.service.NotificationService;
+import fr.esgi.banque.service.Virement;
 import fr.esgi.banque.service.CompteIntrouvableException;
 import fr.esgi.banque.service.impl.VirementServiceImpl;
 
@@ -16,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Optional;
 
@@ -100,6 +102,25 @@ class VirementServiceImplTest {
         verify(repository, never()).sauvegarder(any());
         assertThat(source.getSolde()).isEqualByComparingTo("500.00");
     }
+    
+    @Test
+    void v4_casNominalDebitCrediteSauvegarderEtDateDuJour() {
+        Compte source = compte("FR001", "Moi", "500.00");
+        Compte destination = compte("FR002", "Jérome", "100.00");
+        comptesExistants(source, destination);
+
+        Virement virement = service.virer("FR001", "FR002", new BigDecimal("200.00"));
+
+        assertThat(source.getSolde()).isEqualByComparingTo("300.00");
+        assertThat(destination.getSolde()).isEqualByComparingTo("300.00");
+        verify(repository).sauvegarder(source);
+        verify(repository).sauvegarder(destination);
+        assertThat(virement.numeroSource()).isEqualTo("FR001");
+        assertThat(virement.numeroDestination()).isEqualTo("FR002");
+        assertThat(virement.montant()).isEqualByComparingTo("200.00");
+        assertThat(virement.date()).isEqualTo(LocalDate.of(2026, 11, 16));
+    }
+
 
 
 }

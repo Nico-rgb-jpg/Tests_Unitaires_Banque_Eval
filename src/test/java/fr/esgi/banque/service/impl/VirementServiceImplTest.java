@@ -26,6 +26,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -135,6 +137,26 @@ class VirementServiceImplTest {
         verify(repository, never()).sauvegarder(any());
         assertThat(source.getSolde()).isEqualByComparingTo("100.00");
         assertThat(destination.getSolde()).isEqualByComparingTo("100.00");
+    }
+
+    @ParameterizedTest(name = "V6 :virement de {0} euros : alerte au titulaire source")
+    @ValueSource(strings = {"10000.01", "15000"})
+    void v6_alerteAuTitulaireSourceAuDeLaDe10000(BigDecimal montant) {
+        comptesExistants(compte("FR001", "Moi", "50000"), compte("FR002", "Jérome", "0"));
+
+        service.virer("FR001", "FR002", montant);
+
+        verify(notifications).alerter(eq("Moi"), anyString());
+    }
+
+    @ParameterizedTest(name = "V6 : virement {0} euros : pas d''alerte")
+    @ValueSource(strings = {"10000", "10000.00", "9999.99", "50"})
+    void v6_pasDAlerteJusquA10000(BigDecimal montant) {
+        comptesExistants(compte("FR001", "Moi", "50000"), compte("FR002", "Jérome", "0"));
+
+        service.virer("FR001", "FR002", montant);
+
+        verify(notifications, never()).alerter(anyString(), anyString());
     }
 
 }

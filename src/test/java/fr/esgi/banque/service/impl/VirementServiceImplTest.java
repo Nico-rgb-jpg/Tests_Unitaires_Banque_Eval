@@ -2,6 +2,8 @@ package fr.esgi.banque.service.impl;
 
 import fr.esgi.banque.service.CompteRepository;
 import fr.esgi.banque.service.NotificationService;
+import fr.esgi.banque.service.CompteIntrouvableException;
+import fr.esgi.banque.service.impl.VirementServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,13 +17,18 @@ import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Optional;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+import fr.esgi.banque.business.Compte;
 
 @ExtendWith(MockitoExtension.class)
 class VirementServiceImplTest {
@@ -60,6 +67,41 @@ class VirementServiceImplTest {
         .isInstanceOf(IllegalArgumentException.class);
         verify(repository, never()).sauvegarder(any());
     }
+
+    private static Compte compte(String numero, String titulaire, String solde) {
+        return new Compte(numero, titulaire, new BigDecimal(solde), BigDecimal.ZERO);
+    }
+
+    private void comptesExistants(Compte... comptes) {
+        for (Compte compte : comptes) {
+            when(repository.trouver(compte.getNumero())).thenReturn(Optional.of(compte));
+        }
+    }
+
+    @Test
+    void v3_compteSourceIntrouvable() {
+        when(repository.trouver("INCONNU")).thenReturn(Optional.empty());
+        BigDecimal montant = new BigDecimal("50.00");
+
+        assertThatThrownBy(() -> service.virer("INCONNU", "FR002", montant))
+        .isInstanceOf(CompteIntrouvableException.class);
+        verify(repository, never()).sauvegarder(any());
+    }
+
+    @Test
+    void v3_compteDestinationIntrouvable() {
+        Compte source = compte("FR001", "Moi", "500.00");
+        comptesExistants(source);
+        when(repository.trouver("INCONNU")).thenReturn(Optional.empty());
+        BigDecimal montant = new BigDecimal("50.00");
+
+        assertThatThrownBy(() -> service.virer("FR001", "INCONNU", montant))
+        .isInstanceOf(CompteIntrouvableException.class);
+        verify(repository, never()).sauvegarder(any());
+        assertThat(source.getSolde()).isEqualByComparingTo("500.00");
+    }
+
+
 }
 
     

@@ -4,6 +4,7 @@ import fr.esgi.banque.service.CompteRepository;
 import fr.esgi.banque.service.NotificationService;
 import fr.esgi.banque.service.Virement;
 import fr.esgi.banque.service.CompteIntrouvableException;
+import fr.esgi.banque.service.VirementRefuseException;
 import fr.esgi.banque.service.impl.VirementServiceImpl;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -14,7 +15,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.beans.Transient;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -157,6 +158,41 @@ class VirementServiceImplTest {
         service.virer("FR001", "FR002", montant);
 
         verify(notifications, never()).alerter(anyString(), anyString());
+    }
+
+    private static final Clock SAMEDI = Clock.fixed(Instant.parse("2026-11-14T10:00:00Z"), PARIS);
+
+    private static final Clock DIMANCHE = Clock.fixed(Instant.parse("2026-11-15T10:00:00Z"), PARIS);
+
+    @Test
+    void v7_aucunVirementLeDimanche() {
+        VirementServiceImpl serviceLeDimanche = new VirementServiceImpl(repository, notifications, DIMANCHE);
+        Compte source = compte("FR001", "Moi", "500.00");
+        Compte destination = compte("FR002", "Jéroe", "100.00");
+
+        lenient().when(repository.trouver("FR001")).thenReturn(Optional.of(source));
+        lenient().when(repository.trouver("FR002")).thenReturn(Optional.of(destination));
+        BigDecimal montant = new BigDecimal("50.00");
+
+        assertThatThrownBy(() -> serviceLeDimanche.virer("FR001", "FR002", montant))
+        .isInstanceOf(VirementRefuseException.class);
+        verify(repository, never()).sauvegarder(any());
+        assertThat(source.getSolde()).isEqualByComparingTo("500.00");
+        assertThat(destination.getSolde()).isEqualByComparingTo("100.00");
+    }
+
+    @Test
+    void v7_virementAccepteLeSamedi() {
+        VirementServiceImpl serviceLeSamedi = new VirementServiceImpl(repository, notifications, SAMEDI);
+        Compte source = compte("FR001", "Moi", "500.00");
+        Compte destination = compte("FR002", "Jéroe", "100.00");
+        comptesExistants(source, destination);
+
+        Virement virement = serviceLeSamedi.virer("FR001", "FR002", new BigDecimal("50.00"));
+        
+        assertThat(virement.date()).isEqualTo(LocalDate.of(2026, 11, 14));
+        verify(repository).sauvegarder(source);
+        verify(repository).sauvegarder(destination);
     }
 
 }

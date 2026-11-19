@@ -42,7 +42,7 @@ Pas de défaut trouvé sur C1, C2, C4, C7, F1 et F2.
 
 Capture faite avec VS Code (Run Tests with Coverage) :
 
-![couverture](couverture.png)
+![couverture](couverture.pnj.png)
 
 ## Partie B - Virement
 

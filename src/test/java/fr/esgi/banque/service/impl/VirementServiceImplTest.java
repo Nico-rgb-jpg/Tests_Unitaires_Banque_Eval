@@ -14,6 +14,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.beans.Transient;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
@@ -31,6 +32,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import fr.esgi.banque.business.Compte;
+import fr.esgi.banque.business.SoldeInsuffisantException;
 
 @ExtendWith(MockitoExtension.class)
 class VirementServiceImplTest {
@@ -121,7 +123,19 @@ class VirementServiceImplTest {
         assertThat(virement.date()).isEqualTo(LocalDate.of(2026, 11, 16));
     }
 
+    @Test
+    void v5_soldeInsuffisantRemonteEtRienNEstSauvegarde() {
+        Compte source = compte("FR001", "Moi", "100.00");
+        Compte destination = compte("FR002", "Jéromé", "100.00");
+        comptesExistants(source, destination);
+        BigDecimal montant = new BigDecimal("100.01");
 
+        assertThatThrownBy(() -> service.virer("FR001", "FR002", montant))
+        .isInstanceOf(SoldeInsuffisantException.class);
+        verify(repository, never()).sauvegarder(any());
+        assertThat(source.getSolde()).isEqualByComparingTo("100.00");
+        assertThat(destination.getSolde()).isEqualByComparingTo("100.00");
+    }
 
 }
 

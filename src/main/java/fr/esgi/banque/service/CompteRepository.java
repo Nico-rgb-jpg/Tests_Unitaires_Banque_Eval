@@ -1,8 +1,8 @@
 package fr.esgi.banque.service;
 
-import fr.esgi.banque.business.Compte;
-
 import java.util.Optional;
+
+import fr.esgi.banque.business.Compte;
 
 /**
  * Accès aux comptes (base de données). Aucune implémentation n'est fournie :
